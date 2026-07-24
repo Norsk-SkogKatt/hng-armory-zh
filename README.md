@@ -18,7 +18,7 @@
 
 ## 使用方法
 
-访问hg.miyazawarin.org
+[hng-armory-zh](https://hg.miyazawarin.org)
 
 ## 原项目
 
