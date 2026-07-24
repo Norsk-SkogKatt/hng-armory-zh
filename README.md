@@ -4,7 +4,7 @@
 
 ## 致谢
 
-本项目的原始工具由 [tzm13](https://github.com/tzm13) 开发制作，原项目地址：[hng-armory](https://github.com/tzm13/hng-armory)
+本项目的原始工具由 [tzm13](https://github.com/tzm13) 开发制作，原项目地址：[hng-armory](https://github.com/tzm13/hng-armory),原项目现成网页:[hng-armory](https://hng-armory.top)
 
 本人仅在此基础上制作了中文本地化翻译，所有核心功能和数据均来自原作者的工作。
 
