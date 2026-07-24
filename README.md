@@ -18,7 +18,7 @@
 
 ## 使用方法
 
-直接在浏览器中打开 `index.html` 即可使用，无需服务器。
+访问hg.miyazawarin.org
 
 ## 原项目
 
