@@ -189,6 +189,7 @@ a{color:var(--brass)}
 .spread-readout b{color:var(--brass);font-weight:500}
 .spread-readout .dim{color:var(--ink-faint);font-size:12px}
 .spread-slider{display:flex;align-items:center;gap:10px;font-family:"JetBrains Mono";font-size:11px;color:var(--ink-faint);margin-bottom:12px}
+.spread-dmg{color:var(--brass);font-weight:600;margin-left:auto;white-space:nowrap}
 .rng{flex:1;-webkit-appearance:none;appearance:none;height:4px;border-radius:2px;background:var(--line);outline:none}
 .rng::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:var(--brass);cursor:pointer;border:2px solid #161810}
 .rng::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:var(--brass);cursor:pointer;border:2px solid #161810}
@@ -691,9 +692,11 @@ function renderReadouts(s,b){
 
 function renderGun(R,s,b){
   lastStats=s; lastStatsBase=b;
+  const hb=HITBOX.find(h=>h.id===state.hitbox).mult, hs=HEAVYSET.find(h=>h.id===state.heavyset).mult; // 命中部位×重型武装倍率
+  const mul=hb*hs; // 伤害/每秒伤害随命中部位与重型武装同步变更（四舍五入取整）
   // combat curves live in the side column so they don't overlap the stats
   const C=$("#curvesCol");
-  if(C){ C.innerHTML=""; const cw=el("div"); cw.appendChild(el("div","curves-title","弹道曲线")); cw.appendChild(combatGraphs(s)); C.appendChild(cw); }
+  if(C){ C.innerHTML=""; const cw=el("div"); cw.appendChild(el("div","curves-title","伤害曲线")); cw.appendChild(combatGraphs(s)); C.appendChild(cw); }
 
   // stat sections flow into two columns so short ones sit side-by-side (no dead space);
   // cells within each section grow to fill their row.
@@ -702,8 +705,8 @@ function renderGun(R,s,b){
     cell("射速",fmt(s.rpm),"rpm",{hot:true,delta:s.rpm-b.rpm,betterWhenUp:true}),
     cell("弹匣容量",s.mag,"rds",{}),
     cell("换弹",fmt(s.reload,2),"s",{delta:s.reload-b.reload,dd:2,betterWhenUp:false}),
-    cell("伤害",fmt(s.dmgNear)+" → "+fmt(s.dmgFar),"hp",{hot:true,delta:s.dmgNear-b.dmgNear,betterWhenUp:true}),
-    cell("每秒伤害",fmt(s.dpsNear)+" → "+fmt(s.dpsFar),"hp/s",{hot:true}),
+    cell("伤害",fmt(Math.round(s.dmgNear*mul))+" → "+fmt(Math.round(s.dmgFar*mul)),"hp",{hot:true,delta:Math.round(s.dmgNear*mul)-Math.round(b.dmgNear*mul),betterWhenUp:true}),
+    cell("每秒伤害",fmt(Math.round(s.dpsNear*mul))+" → "+fmt(Math.round(s.dpsFar*mul)),"hp/s",{hot:true}),
     cell("击杀所需命中数",s.htkNear+" → "+s.htkFar,"",{kill:true}),
     cell("击杀时间",fmt(s.ttkNear)+" → "+fmt(s.ttkFar),"ms",{kill:true}),
     cell("枪口初速",fmt(s.velocity),"m/s",{}),
@@ -739,7 +742,7 @@ function renderGun(R,s,b){
   R.appendChild(flow);
 
   lastCone=s.cone;
-  R.appendChild(sectionOf("精度与后坐力",buildAccuracy({target:"soldier",recoil:true})));
+  R.appendChild(sectionOf("精度后坐力与伤害距离",buildAccuracy({target:"soldier",recoil:true})));
   updateSpread();
 }
 
@@ -844,7 +847,7 @@ function buildAccuracy(opts={}){
   const head=el("div",null,'<div id="spreadReadout" class="spread-readout"></div>'+
     '<div class="spread-slider"><span>10 m</span>'+
     `<input id="spreadSlider" class="rng" type="range" min="10" max="600" step="5" value="${state.spreadRange}">`+
-    '<span>600 m</span></div>');
+    '<span>600 m</span><span id="spreadDmg" class="spread-dmg"></span></div>');
   const spreadCap=lastTarget==="tank"?"对M5A1斯图尔特散布":"对士兵散布";
   let paneHTML='<div><div class="spread-cap">'+spreadCap+'</div><div id="silhouetteBox"></div></div>';
   if(lastRecoil) paneHTML+='<div><div class="spread-cap">后坐力模式 (一个弹匣)</div><div id="recoilBox"></div></div>';
@@ -862,9 +865,18 @@ function updateSpread(){
     const ref = lastTarget==="tank"
       ? `≈ ${Math.round(dia/2.26*100)}% Stuart 高度`   // M5A1 side profile ≈ 2.26 m tall
       : `≈ ${Math.round(dia/0.5*100)}% 躯干宽度`;             // ~0.5 m torso width
+    const tHit=(lastTarget==="soldier"&&lastStats&&lastStats.velocity>0)
+      ? ` &nbsp;·&nbsp; 命中时间 <b>${fmt(d/lastStats.velocity,2)} s</b>` : "";
     ro.innerHTML =
-      `<b>${deg.toFixed(3)}°</b> 散布 &nbsp;·&nbsp; <b>${d} m</b> 处 → <b>±${r.toFixed(3)} m</b> `+
-      `<span class="dim">(${(dia*100).toFixed(1)} cm 跨度, ${ref})</span>`;
+      `<b>${deg.toFixed(3)}°</b> 散布 &nbsp;·&nbsp; <b>${d} m</b> 处偏移 <b>±${r.toFixed(3)} m</b> `+
+      `<span class="dim">(${(dia*100).toFixed(1)} cm 跨度, ${ref})</span>`+tHit;
+  }
+  const dm=document.getElementById("spreadDmg");
+  if(dm){
+    if(lastTarget==="soldier"&&lastStats){
+      const hb=HITBOX.find(h=>h.id===state.hitbox).mult, hs=HEAVYSET.find(h=>h.id===state.heavyset).mult;
+      dm.innerHTML="伤害 <b>"+fmt(Math.round(dmgAtRange(lastStats,d)*hb*hs))+" hp</b>";
+    } else dm.innerHTML="";
   }
   const sb=document.getElementById("silhouetteBox"); if(sb) sb.innerHTML= lastTarget==="tank"?tankSVG(r):silhouetteSVG(r);
   const rb=document.getElementById("recoilBox"); if(rb && lastStats) rb.innerHTML=recoilSVG(lastStats,lastStatsBase);
@@ -1226,7 +1238,7 @@ function renderVersus(){
 
   const sers=cols.map(c=>({name:c.w.name,color:c.color,s:c.s}));
   const charts=el("div","vs-charts");
-  charts.appendChild(el("div","curves-title","弹道曲线"));
+  charts.appendChild(el("div","curves-title","伤害曲线"));
   const box=el("div","chartwrap");
   // one shared legend for both charts, like the Data Sheet's curves column
   box.appendChild(el("div","chart-legend",
