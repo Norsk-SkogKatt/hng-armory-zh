@@ -54,7 +54,7 @@ button{font-family:inherit;color:inherit;cursor:pointer}
 a{color:var(--brass)}
 :focus-visible{outline:2px solid var(--brass);outline-offset:2px}
 
-.app{display:grid;grid-template-columns:270px 1fr;min-height:100vh}
+.app{display:grid;grid-template-columns:270px 1fr;grid-template-rows:auto 1fr;min-height:100vh}
 @media(max-width:820px){.app{grid-template-columns:1fr}}
 
 .topbar{grid-column:1/-1;display:flex;align-items:center;gap:16px;padding:12px 20px;background:linear-gradient(180deg,#20241a,#181b12);border-bottom:2px solid var(--brass-dim)}
