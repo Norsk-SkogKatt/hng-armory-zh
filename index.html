@@ -401,7 +401,7 @@ td{font-family:"JetBrains Mono"} tbody tr{cursor:pointer} tbody tr:hover{backgro
         <p>包含美军、德军与苏军全部步兵装备：步枪与栓动步枪、
         冲锋枪、轻机枪、手枪、巴祖卡、坦克杀手与铁拳等反坦克火箭筒，
         以及手雷、地雷与其他装备。配装可配置配件、替换弹药类型与快速装填、铁拳、
-        重装护甲和掷弹兵徽章，任意两到三把武器可以并排对比。</p>
+        重装上阵和掷弹兵徽章，任意两到三把武器可以并排对比。</p>
         <noscript><p><strong>使用交互式武器数据库需要启用 JavaScript。</strong>
         请启用 JavaScript 以浏览和对比武器数据。</p></noscript>
       </div>
@@ -418,7 +418,7 @@ td{font-family:"JetBrains Mono"} tbody tr{cursor:pointer} tbody tr:hover{backgro
           <div id="fmlSlot" class="cfg-fml"></div>
           <div class="cfg-divider">目标</div>
           <div class="cfg-seg" data-key="hitbox"><label>命中部位</label><div class="seg" id="hitboxSeg"></div></div>
-          <div class="cfg-seg" data-key="heavyset"><label>敌方重装护甲</label><div class="seg" id="heavySeg"></div></div>
+          <div class="cfg-seg" data-key="heavyset"><label>重装上阵</label><div class="seg" id="heavySeg"></div></div>
           <div class="cfg-divider">徽章</div>
           <div class="cfg-seg" data-key="reload"><label>快速装填徽章</label><div class="seg" id="reloadSeg"></div></div>
           <div class="cfg-seg" data-key="ironfist"><label>步兵至上/铁拳徽章</label><div class="seg" id="ironFistSeg"></div></div>
@@ -1374,7 +1374,7 @@ function renderVersus(){
   const bar=el("div","vs-presets");
   const addSeg=(lbl,items,cur,set)=>{const b=el("div","vs-preset");b.appendChild(el("label",null,lbl));const sg=el("div","seg");b.appendChild(sg);seg(sg,items,cur,id=>{set(id);renderVersus();});bar.appendChild(b);};
   addSeg("命中部位",HITBOX,state.vs.hitbox,id=>state.vs.hitbox=id);
-  addSeg("敌方重装护甲",HEAVYSET,state.vs.heavyset,id=>state.vs.heavyset=id);
+  addSeg("重装上阵",HEAVYSET,state.vs.heavyset,id=>state.vs.heavyset=id);
   addSeg("快速装填",FASTRELOAD,state.vs.fastReload,id=>state.vs.fastReload=id);
   addSeg("步兵至上/铁拳",IRONFIST,state.vs.ironFist,id=>state.vs.ironFist=id);
   addSeg("掷弹兵",GRENADIER,state.vs.grenadier,id=>state.vs.grenadier=id);
@@ -1705,7 +1705,7 @@ function renderVehicleDetail(){
     if(vw && !noArm){
       CFG.appendChild(el("div","cfg-divider","徽章"));
       const addSeg=(lbl,items,cur,set)=>{const b=el("div","cfg-seg");b.appendChild(el("label",null,lbl));const sg=el("div","seg");b.appendChild(sg);seg(sg,items,cur,id=>{set(id);renderVehicleDetail();});CFG.appendChild(b);};
-      addSeg("敌方重装护甲",HEAVYSET,state.vheavyset,id=>state.vheavyset=id);
+      addSeg("重装上阵",HEAVYSET,state.vheavyset,id=>state.vheavyset=id);
       addSeg("炮手徽章(换弹)",GUNNER,state.vgunner,id=>state.vgunner=id);
       addSeg("掷弹兵(高爆对人)",GRENADIER,state.vgrenadier,id=>state.vgrenadier=id);
     }
@@ -1916,7 +1916,7 @@ function renderVehicleVersus(){
   barWrap.appendChild(barHead);
   const bar=el("div","vs-presets");
   const addSeg=(lbl,items,cur,set)=>{const b=el("div","vs-preset");b.appendChild(el("label",null,lbl));const sg=el("div","seg");b.appendChild(sg);seg(sg,items,cur,id=>{set(id);renderVehicleVersus();});bar.appendChild(b);};
-  addSeg("敌方重装护甲",HEAVYSET,state.vvs.heavyset,id=>state.vvs.heavyset=id);
+  addSeg("重装上阵",HEAVYSET,state.vvs.heavyset,id=>state.vvs.heavyset=id);
   addSeg("炮手",GUNNER,state.vvs.gunner,id=>state.vvs.gunner=id);
   addSeg("掷弹兵",GRENADIER,state.vvs.grenadier,id=>state.vvs.grenadier=id);
   barWrap.appendChild(bar); host.appendChild(barWrap);
