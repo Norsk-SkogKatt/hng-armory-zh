@@ -717,7 +717,11 @@ function buildSidebar(filter=""){
       const key=facKey+":"+cat, cOpen=searching || !!state.open.cat[key], items=cats[cat];
       const ch=el("div","cat-head"+(cOpen?"":" closed"),
         `<span class="tw">▾</span>${cat}<span class="cnt">${items.length}</span>`);
-      ch.onclick=()=>{state.open.cat[key]=!state.open.cat[key];buildSidebar(filter);};
+      ch.onclick=()=>{
+        if(state.open.cat[key]){ state.open.cat[key]=false; }
+        else{ Object.keys(state.open.cat).forEach(k=>{ if(k.startsWith(facKey+":")) state.open.cat[k]=false; }); state.open.cat[key]=true; }
+        buildSidebar(filter);
+      };
       list.appendChild(ch);
       if(!cOpen)return;
       items.sort((a,b)=>a.name.localeCompare(b.name)).forEach(w=>list.appendChild(wpnItem(w)));
@@ -1559,7 +1563,11 @@ function buildVehicleSidebar(filter=""){
       if(!items.length) return;
       const ckey=fkey+":"+cat, cOpen=searching || !!state.vopen[ckey];
       const ch=el("div","cat-head"+(cOpen?"":" closed"),`<span class="tw">▾</span>${cat} <span class="cnt">${items.length}</span>`);
-      ch.onclick=()=>{state.vopen[ckey]=!state.vopen[ckey];buildVehicleSidebar($("#search").value);};
+      ch.onclick=()=>{
+        if(state.vopen[ckey]){ state.vopen[ckey]=false; }
+        else{ Object.keys(state.vopen).forEach(k=>{ if(k.startsWith(fkey+":")) state.vopen[k]=false; }); state.vopen[ckey]=true; }
+        buildVehicleSidebar($("#search").value);
+      };
       host.appendChild(ch);
       if(!cOpen) return;
       items.sort((a,b)=>a.name.localeCompare(b.name)).forEach(v=>{
