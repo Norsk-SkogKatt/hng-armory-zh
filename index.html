@@ -661,7 +661,7 @@ let state={wid:WEAPONS[0].id,ammoId:WEAPONS[0].defaultAmmo.id,modIds:[],hitbox:"
            vhitbox:"torso",vheavyset:"none",vgunner:"none",vgrenadier:"none",vopen:{},silTarget:null,
            vmg:"none",vcrate:"none",vcrate2:"none",vmgOpen:false,cratesOpen:false,vsort:{key:"name",dir:1},
              vversus:[],vvs:{heavyset:"none",gunner:"none",grenadier:"none"},vvsBarClosed:false,vvsGroupClosed:{},
-  sbFilter:{fac:"",cat:""},sbFilterOpen:false,vsbFilter:{fac:"",cat:""},vsbFilterOpen:false};
+  sbFilter:{fac:"",cat:""},sbFilterOpen:false,tblFacSort:false,vsbFilter:{fac:"",cat:""},vsbFilterOpen:false,vtblFacSort:false};
 let lastCone=0; // current cone-of-fire (deg) for the spread visual
 let lastTarget="soldier"; // spread target: soldier (guns) or tank (AT weapons)
 let lastRecoil=true; // whether the recoil pane is shown
@@ -722,6 +722,12 @@ function buildSbFilterBar(mode){
   cg.appendChild(catSel); panel.appendChild(cg);
   btn.onclick=e=>{e.stopPropagation(); if(inf)state.sbFilterOpen=!state.sbFilterOpen; else state.vsbFilterOpen=!state.vsbFilterOpen; if(inf)renderTable(); else renderVehicleTable();};
   wrap.appendChild(btn); wrap.appendChild(panel);
+  // 阵营排序按钮：三条横线图标，点击激活/关闭（默认关闭），激活时按 美→德→苏→通用 排序
+  const facBtn=el("button","vs-fbtn"+((inf?state.tblFacSort:state.vtblFacSort)?" on":""));
+  facBtn.type="button"; facBtn.title="阵营排序";
+  facBtn.innerHTML='<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="7" y1="12" x2="20" y2="12"/><line x1="10" y1="18" x2="20" y2="18"/></svg>';
+  facBtn.onclick=e=>{e.stopPropagation(); if(inf)state.tblFacSort=!state.tblFacSort; else state.vtblFacSort=!state.vtblFacSort; if(inf)renderTable(); else renderVehicleTable();};
+  wrap.appendChild(facBtn);
   return wrap;
 }
 
@@ -1290,6 +1296,8 @@ function renderTable(){
   const rows=WEAPONS.filter(w=>!sbf.fac||String(w.factiontemplateid)===sbf.fac).filter(w=>!sbf.cat||String(w.weaponcategoryid)===sbf.cat).map(w=>({w,s:compute(w,{ammoId:w.defaultAmmo.id,modIds:[],hitbox:"torso",heavyset:"none",stance:"aim"})}));
   const {key,dir}=state.sort, col=TCOLS.find(c=>c.k===key);
   rows.sort((a,b)=>{const av=col.get(a.w,a.s),bv=col.get(b.w,b.s);return (typeof av==="string"?av.localeCompare(bv):av-bv)*dir;});
+  // 阵营排序（激活时按 美→德→苏→通用 分组，稳定排序保留组内列排序顺序）
+  if(state.tblFacSort){const FO=[1,2,3,0];rows.sort((a,b)=>((FO.indexOf(a.w.factiontemplateid)<0?99:FO.indexOf(a.w.factiontemplateid))-(FO.indexOf(b.w.factiontemplateid)<0?99:FO.indexOf(b.w.factiontemplateid))));}
   const t=$("#cmpTable"); t.innerHTML="";
   const tr=el("tr");
   TCOLS.forEach(c=>{const th=el("th",null,c.label);if(c.k===key)th.setAttribute("aria-sort",dir>0?"ascending":"descending");
@@ -1844,6 +1852,8 @@ function renderVehicleTable(){
   const rows=VEHICLES.filter(v=>!vsbf.fac||String(v.factiontemplateid)===vsbf.fac).filter(v=>!vsbf.cat||v.category===vsbf.cat).map(v=>({v,s:vehMainStats(v)}));
   const {key,dir}=state.vsort, col=VCOLS.find(c=>c.k===key)||VCOLS[0];
   rows.sort((a,b)=>{const av=col.get(a.v,a.s),bv=col.get(b.v,b.s);return (typeof av==="string"?av.localeCompare(bv):av-bv)*dir;});
+  // 阵营排序（激活时按 美→德→苏→通用 分组，稳定排序保留组内列排序顺序）
+  if(state.vtblFacSort){const FO=[1,2,3,0];rows.sort((a,b)=>((FO.indexOf(a.v.factiontemplateid)<0?99:FO.indexOf(a.v.factiontemplateid))-(FO.indexOf(b.v.factiontemplateid)<0?99:FO.indexOf(b.v.factiontemplateid))));}
   const t=$("#cmpTable"); t.innerHTML="";
   const trh=el("tr");
   VCOLS.forEach(c=>{const th=el("th",null,c.label);if(c.k===key)th.setAttribute("aria-sort",dir>0?"ascending":"descending");
