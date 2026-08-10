@@ -290,6 +290,13 @@ body.veh .seg button:not([aria-pressed="true"]),body.veh .cfg-sel select,body.ve
 .dmg-tip{position:absolute;top:8px;pointer-events:none;opacity:0;transition:opacity .08s;background:#12140dEE;border:1px solid var(--line);border-radius:var(--radius);padding:5px 8px;font-family:"JetBrains Mono";font-size:11px;line-height:1.35;white-space:nowrap}
 .dmg-tip b{color:var(--ink)}
 .vs-pickers{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:18px}
+.vs-filterbar{display:flex;align-items:center;position:relative;margin:4px 0 14px}
+.vs-fbtn{width:34px;height:30px;background:#12140d;color:var(--ink);border:1px solid var(--line);border-radius:var(--radius);display:flex;align-items:center;justify-content:center;cursor:pointer}
+.vs-fbtn:hover,.vs-fbtn.on{color:var(--brass);border-color:var(--brass)}
+.vs-fpanel{position:absolute;top:36px;left:0;z-index:40;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:12px 14px;display:flex;gap:18px;box-shadow:0 8px 24px rgba(0,0,0,.55)}
+.vs-fpanel[hidden]{display:none}
+.vs-fpanel .f-group{display:flex;flex-direction:column;gap:5px;font-size:12px;color:var(--ink-dim)}
+.vs-fsel{background:#12140d;color:var(--ink);border:1px solid var(--line);padding:5px 7px;border-radius:var(--radius);font-size:13px;min-width:150px}
 .vs-pickbox{display:flex;align-items:center;gap:8px;flex:1 1 200px}
 .vs-dot{width:12px;height:12px;border-radius:3px;flex:none;box-shadow:0 0 0 1px #0004 inset}
 .vs-pick{flex:1;background:#12140d;color:var(--ink);border:1px solid var(--line);padding:8px 9px;border-radius:var(--radius);font-size:14px}
@@ -652,7 +659,8 @@ let state={wid:WEAPONS[0].id,ammoId:WEAPONS[0].defaultAmmo.id,modIds:[],hitbox:"
            mode:"inf",vid:(typeof VEHICLES!=="undefined"?VEHICLES[0].id:null),vweap:0,vAmmoId:null,vModIds:[],
            vhitbox:"torso",vheavyset:"none",vgunner:"none",vgrenadier:"none",vopen:{},silTarget:null,
            vmg:"none",vcrate:"none",vcrate2:"none",vmgOpen:false,cratesOpen:false,vsort:{key:"name",dir:1},
-           vversus:[],vvs:{heavyset:"none",gunner:"none",grenadier:"none"},vvsBarClosed:false,vvsGroupClosed:{}};
+            vversus:[],vvs:{heavyset:"none",gunner:"none",grenadier:"none"},vvsBarClosed:false,vvsGroupClosed:{},
+            vsFilter:{fac:"",cat:""},vsFilterOpen:false,vvsFilter:{fac:"",cat:""},vvsFilterOpen:false};
 let lastCone=0; // current cone-of-fire (deg) for the spread visual
 let lastTarget="soldier"; // spread target: soldier (guns) or tank (AT weapons)
 let lastRecoil=true; // whether the recoil pane is shown
@@ -1266,11 +1274,61 @@ function renderTable(){
 const VS_PALETTE=["#c9a24b","#c85a3f","#7f95a3"];
 const stockOf=w=>compute(w,{ammoId:w.defaultAmmo.id,modIds:[],hitbox:"torso",heavyset:"none",stance:"aim"});
 
+// 对比视图筛选栏：放大镜按钮 + 阵营/类别实时筛选（步兵与载具模式共用）
+function buildVsFilterBar(mode){
+  const inf=mode==="inf";
+  const f=inf?state.vsFilter:state.vvsFilter;
+  const FAC_ORDER=[1,2,3,0];
+  const wrap=el("div","vs-filterbar");
+  const onCls=(inf?state.vsFilterOpen:state.vvsFilterOpen)?" on":"";
+  const btn=el("button","vs-fbtn"+onCls);
+  btn.type="button"; btn.title="筛选";
+  btn.innerHTML='<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg>';
+  const panel=el("div","vs-fpanel"); panel.hidden=!(inf?state.vsFilterOpen:state.vvsFilterOpen);
+  const mkGroup=lbl=>{const g=el("div","f-group"); g.appendChild(el("span",null,lbl)); return g;};
+  // 阵营
+  const fg=mkGroup("阵营"), facSel=el("select","vs-fsel");
+  const any=el("option",null,"全部"); any.value=""; facSel.appendChild(any);
+  FAC_ORDER.forEach(fid=>{const fac=FACTIONS[fid]; if(!fac)return; const o=el("option",null,fac.name); o.value=String(fid); if(String(f.fac)===String(fid))o.selected=true; facSel.appendChild(o);});
+  facSel.onchange=()=>{f.fac=facSel.value; if(inf)applyInfFilter(); else applyVehFilter();};
+  fg.appendChild(facSel); panel.appendChild(fg);
+  // 类别（步兵=完整武器类别；载具=VEHICLE_CATEGORY_ORDER）
+  const cg=mkGroup(inf?"武器类型":"载具类型"), catSel=el("select","vs-fsel");
+  const any2=el("option",null,"全部"); any2.value=""; catSel.appendChild(any2);
+  if(inf){
+    Object.keys(CATEGORIES).map(Number).sort((a,b)=>a-b).forEach(cid=>{const o=el("option",null,CATEGORIES[cid]); o.value=String(cid); if(String(f.cat)===String(cid))o.selected=true; catSel.appendChild(o);});
+  }else{
+    (typeof VEHICLE_CATEGORY_ORDER!=="undefined"?VEHICLE_CATEGORY_ORDER:[]).forEach(cat=>{const o=el("option",null,cat); o.value=cat; if(f.cat===cat)o.selected=true; catSel.appendChild(o);});
+  }
+  catSel.onchange=()=>{f.cat=catSel.value; if(inf)applyInfFilter(); else applyVehFilter();};
+  cg.appendChild(catSel); panel.appendChild(cg);
+  btn.onclick=e=>{e.stopPropagation(); if(inf)state.vsFilterOpen=!state.vsFilterOpen; else state.vvsFilterOpen=!state.vvsFilterOpen; if(inf)renderVersus(); else renderVehicleVersus();};
+  wrap.appendChild(btn); wrap.appendChild(panel);
+  return wrap;
+}
+// 筛选生效：清空不符合条件的已选槽位后重渲染（实时）
+function applyInfFilter(){
+  state.versus=state.versus.map(e=>{
+    if(!e)return e; const w=WEAPONS.find(x=>x.id===e.wid); if(!w)return e;
+    if((state.vsFilter.fac&&String(w.factiontemplateid)!==state.vsFilter.fac)||(state.vsFilter.cat&&String(w.weaponcategoryid)!==state.vsFilter.cat))return null;
+    return e;
+  });
+  renderVersus();
+}
+function applyVehFilter(){
+  state.vversus=state.vversus.map(e=>{
+    if(!e)return e; const v=VEHICLES.find(x=>x.id===e.vid); if(!v)return e;
+    if((state.vvsFilter.fac&&String(v.factiontemplateid)!==state.vvsFilter.fac)||(state.vvsFilter.cat&&v.category!==state.vvsFilter.cat))return null;
+    return e;
+  });
+  renderVehicleVersus();
+}
 function weaponPicker(idx,entry,allowNone){
   const sel=el("select","vs-pick");
   if(allowNone){const o=el("option",null,"— 无 —");o.value="";if(!entry)o.selected=true;sel.appendChild(o);}
+  const f=state.vsFilter||{fac:"",cat:""};
   const groups={};
-  WEAPONS.forEach(w=>{const fk=(FACTIONS[w.factiontemplateid]||{}).name||("Faction "+w.factiontemplateid);(groups[fk] ??= []).push(w);});
+  WEAPONS.filter(w=>!f.fac||String(w.factiontemplateid)===f.fac).filter(w=>!f.cat||String(w.weaponcategoryid)===f.cat).forEach(w=>{const fk=(FACTIONS[w.factiontemplateid]||{}).name||("Faction "+w.factiontemplateid);(groups[fk] ??= []).push(w);});
   Object.keys(groups).sort().forEach(fk=>{
     const og=el("optgroup"); og.label=fk;
     groups[fk].sort((a,b)=>a.name.localeCompare(b.name)).forEach(w=>{
@@ -1380,6 +1438,7 @@ function renderVersus(){
   addSeg("掷弹兵",GRENADIER,state.vs.grenadier,id=>state.vs.grenadier=id);
   addSeg("姿态",STANCES,state.vs.stance,id=>state.vs.stance=id);
   barWrap.appendChild(bar); host.appendChild(barWrap);
+  host.appendChild(buildVsFilterBar("inf"));
 
   const cols=state.versus.map((entry,i)=>{
     if(!entry)return null; const w=WEAPONS.find(x=>x.id===entry.wid); if(!w)return null;
@@ -1874,8 +1933,10 @@ function vehColConfig(i,entry){
   // vehicle select grouped by category
   const vsel=el("select","vs-vehsel");
   const none=el("option",null,entry?"\u2014 更换 \u2014":"\u2014 选择载具 \u2014"); none.value=""; vsel.appendChild(none);
+  const f=state.vvsFilter||{fac:"",cat:""};
+  const vis=VEHICLES.filter(v=>(!f.fac||String(v.factiontemplateid)===f.fac)&&(!f.cat||v.category===f.cat));
   VEHICLE_CATEGORY_ORDER.forEach(cat=>{
-    const inCat=VEHICLES.filter(v=>v.category===cat); if(!inCat.length)return;
+    const inCat=vis.filter(v=>v.category===cat); if(!inCat.length)return;
     const og=el("optgroup"); og.label=cat;
     inCat.forEach(v=>{const o=el("option",null,v.name);o.value=v.id;if(entry&&v.id===entry.vid)o.selected=true;og.appendChild(o);});
     vsel.appendChild(og);
@@ -1906,8 +1967,12 @@ function renderVehicleVersus(){
   const host=$("#versusView"); host.innerHTML="";
   if(!state.vversus) state.vversus=[];
   if(!state.vversus.filter(Boolean).length){
-    const armed=VEHICLES.filter(v=>v.mainWeapon&&v.mainWeapon.defaultAmmo);
-    [0,1].forEach(k=>{const v=armed[k];if(v)state.vversus[k]={vid:v.id,vweap:0,ammoId:v.mainWeapon.defaultAmmo.id};});
+    // 有筛选条件时保持空槽位（让用户从筛选结果中自行选择），无筛选时填充默认载具
+    const vf=state.vvsFilter||{fac:"",cat:""};
+    if(!vf.fac&&!vf.cat){
+      const armed=VEHICLES.filter(v=>v.mainWeapon&&v.mainWeapon.defaultAmmo);
+      [0,1].forEach(k=>{const v=armed[k];if(v)state.vversus[k]={vid:v.id,vweap:0,ammoId:v.mainWeapon.defaultAmmo.id};});
+    }
   }
   // scenario badges
   const barWrap=el("div","vs-presetwrap"+(state.vvsBarClosed?" closed":""));
@@ -1920,6 +1985,7 @@ function renderVehicleVersus(){
   addSeg("炮手",GUNNER,state.vvs.gunner,id=>state.vvs.gunner=id);
   addSeg("掷弹兵",GRENADIER,state.vvs.grenadier,id=>state.vvs.grenadier=id);
   barWrap.appendChild(bar); host.appendChild(barWrap);
+  host.appendChild(buildVsFilterBar("veh"));
 
   const cols=vehVersusCols().filter(Boolean);
 
