@@ -10,8 +10,8 @@
 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
 <meta name="apple-mobile-web-app-title" content="H&G Armory" />
 <link rel="manifest" href="/site.webmanifest" />
-<meta name="description" content="H&amp;G 军械库是一个免费的 Heroes &amp; Generals 武器数据统计与对比工具。对比每一把步枪、冲锋枪、轻机枪、手枪、反坦克火箭筒、手雷与地雷的伤害、每秒伤害、击杀时间、后坐力、精度、装甲穿透与换弹时间，支持配件、弹药类型与徽章配置。">
-<meta name="keywords" content="Heroes and Generals, H&amp;G, 武器数据, 伤害计算器, TTK, DPS, 武器对比, 英雄与将军">
+<meta name="description" content="H&amp;G 军械库是一个免费的 Heroes &amp; Generals 武器与载具数据统计与对比工具。对比每一把步枪、冲锋枪、轻机枪、手枪、反坦克火箭筒、手雷与地雷的伤害、每秒伤害、击杀时间、后坐力、精度、装甲穿透与换弹时间，以及坦克、坦克歼击车、侦察载具与飞机的装甲伤害、穿透、部署成本与战场维护载荷，支持配件、弹药类型、补给箱与徽章配置。">
+<meta name="keywords" content="Heroes and Generals, H&amp;G, 武器数据, 载具数据, 坦克数据, 伤害计算器, TTK, DPS, 装甲穿透, 武器对比, 坦克对比, 英雄与将军">
 <meta name="author" content="zewm">
 <link rel="canonical" href="https://hng-armory.top/">
 <meta name="robots" content="index, follow">
@@ -20,17 +20,17 @@
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="H&amp;G Armory">
 <meta property="og:url" content="https://hng-armory.top/">
-<meta property="og:title" content="H&amp;G 军械库 — Heroes &amp; Generals 武器数据">
-<meta property="og:description" content="免费的 Heroes &amp; Generals 武器数据：伤害、每秒伤害、击杀时间、后坐力、精度与装甲穿透，覆盖全部武器，支持配件、弹药与徽章。可并排对比任意两到三把武器。">
+<meta property="og:title" content="H&amp;G 军械库 — Heroes &amp; Generals 武器与载具数据">
+<meta property="og:description" content="免费的 Heroes &amp; Generals 武器与载具数据：伤害、每秒伤害、击杀时间、后坐力、精度与装甲穿透，覆盖全部武器和载具——枪械、坦克、坦克歼击车与飞机，支持配件、弹药、补给箱与徽章。可并排对比最多三件。">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="H&amp;G 军械库 — Heroes &amp; Generals 武器数据">
-<meta name="twitter:description" content="免费的 Heroes &amp; Generals 武器数据与对比工具：伤害、每秒伤害、击杀时间、后坐力、精度、装甲穿透。">
+<meta name="twitter:title" content="H&amp;G 军械库 — Heroes &amp; Generals 武器与载具数据">
+<meta name="twitter:description" content="免费的 Heroes &amp; Generals 武器与载具数据与对比工具：伤害、每秒伤害、击杀时间、后坐力、精度与装甲穿透，枪械、坦克与飞机可并排对比。">
 
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"WebApplication",
 "name":"H&G 军械库","url":"https://hng-armory.top/",
 "applicationCategory":"GameApplication","operatingSystem":"Any (web browser)",
-"description":"Heroes & Generals 武器数据数据库与对比工具：覆盖伤害、每秒伤害、击杀时间、后坐力、精度、装甲穿透与换弹时间，支持配件、弹药类型与徽章。",
+"description":"Heroes & Generals 武器与载具数据数据库与对比工具：覆盖伤害、每秒伤害、击杀时间、后坐力、精度、装甲穿透、部署成本与战场维护载荷，支持配件、弹药类型、补给箱与徽章。",
 "author":{"@type":"Person","name":"zewm"},
 "offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},
 "about":{"@type":"VideoGame","name":"Heroes & Generals"}}
@@ -1673,7 +1673,6 @@ function renderVehicleDetail(){
 
   // ===== VEHICLE section =====
   const vhead=el("div","stat-group sec-head"); vhead.appendChild(el("h3",null,"载具")); R.appendChild(vhead);
-  const arm=v.hitPoints&&v.armorHPMul?v.hitPoints*v.armorHPMul:0;
   // Only sidecar bikes can mount an LMG. They spawn for the same base as the plain bike,
   // and mounting raises it: Tier 1 LMG +92, Tier 2 LMG (or .50 cal for US/SU) +180.
   // Mountable armament: sidecar bikes + non-amphibious infantry jeeps. Mounting an LMG
@@ -1703,8 +1702,7 @@ function renderVehicleDetail(){
   ].filter(Boolean);
   const durabilityCells=[
     v.hitPoints?cell("生命值",fmt(v.hitPoints),"hp",{hot:true,w:"n"}):null,
-    v.armorHPMul?cell("装甲倍率",fmt(v.armorHPMul,v.armorHPMul%1===0?0:2),"×",{w:"n"}):null,
-    arm?cell("有效装甲",fmt(arm),"hp",{hot:true,w:"n"}):null,
+    v.armorHPMul?cell("装甲 HP ×",fmt(v.armorHPMul,v.armorHPMul%1===0?0:2),"×",{w:"n"}):null,
   ].filter(Boolean);
   const costCells=[
     (spawnVal!=null)?cell(spawnLabel,cr(fmt(spawnVal)),"",{hot:true,w:"n"}):null,
@@ -1855,7 +1853,7 @@ const VCOLS=[
   {k:"category",label:"类别",num:false,get:(v,s)=>v.category},
   {k:"gun",label:"主武器",num:false,get:(v,s)=>v.mainWeapon?v.mainWeapon.name:"\u2014"},
   {k:"hp",label:"生命值",get:(v,s)=>v.hitPoints||0},
-  {k:"armor",label:"有效装甲",get:(v,s)=>(v.hitPoints||0)*(v.armorHPMul||0)},
+  {k:"armor",label:"装甲 ×",get:(v,s)=>v.armorHPMul||0},
   {k:"speed",label:"速度",get:(v,s)=>v.speed||0},
   {k:"pen",label:"穿透mm",get:(v,s)=>s?s.penMax:0},
   {k:"admg",label:"装甲伤害",get:(v,s)=>s?s.armorMax:0},
@@ -1886,6 +1884,7 @@ function renderVehicleTable(){
       if(c.k==="name")val=`<span class="faction-dot" style="background:${fac.color}"></span>${val}`;
       else if(c.k==="spawn")val=(v.spawnCost==null?"\u2014":fmt(v.spawnCost));
       else if(c.k==="pen"||c.k==="admg")val=(s?fmt(val):"\u2014");
+      else if(c.k==="armor")val=fmt(val,val%1===0?0:2)+"×";
       else if(c.num!==false)val=fmt(val);
       r.appendChild(el("td",null,val));});
     r.onclick=()=>selectVehicle(v.id);
@@ -1898,7 +1897,7 @@ function renderVehicleTable(){
 const VVS_GROUPS=[
   {title:"载具",rows:[
     {label:"生命值",get:c=>c.v.hitPoints||0,better:"up"},
-    {label:"有效装甲",get:c=>(c.v.hitPoints||0)*(c.v.armorHPMul||0),better:"up"},
+    {label:"装甲 HP ×",get:c=>c.v.armorHPMul||0,disp:c=>fmt(c.v.armorHPMul,c.v.armorHPMul%1===0?0:2)+"×",better:"up"},
     {label:"最高速度",get:c=>c.v.speed||0,unit:"km/h",better:"up"},
     {label:"质量",get:c=>(c.v.mass||0)/1000,dd:1,unit:"t",better:"down"},
     {label:"部署成本",get:c=>c.v.spawnCost==null?Infinity:c.v.spawnCost,disp:c=>c.v.spawnCost==null?"\u2014":cr(fmt(c.v.spawnCost)),better:"down"},
