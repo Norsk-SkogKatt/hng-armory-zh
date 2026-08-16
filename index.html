@@ -936,7 +936,7 @@ function renderGun(R,s,b){
     cell("换弹",fmt(s.reload,2),"s",{delta:s.reload-b.reload,dd:2,betterWhenUp:false,w:"n"}),
     cell("弹匣容量",s.mag,"发",{w:"n"}),
     cell("携带弹匣数",s.mags,"",{w:"n"}),
-    cell("有效伤害("+HITBOX.find(h=>h.id===state.hitbox).label+(state.heavyset!=="none"?" · 重装 "+HEAVYSET.find(h=>h.id===state.heavyset).label:"")+")",fmt(s.effNear,0)+" → "+fmt(s.effFar,0),"hp",{hot:true,delta:s.effNear-b.effNear,dd:0,betterWhenUp:true,w:"w"}),
+    cell("有效伤害("+HITBOX.find(h=>h.id===state.hitbox).label+(state.heavyset!=="none"?" · 重装 "+HEAVYSET.find(h=>h.id===state.heavyset).label:"")+")",fmt(s.effNear,2)+" → "+fmt(s.effFar,2),"hp",{hot:true,delta:s.effNear-b.effNear,dd:2,betterWhenUp:true,w:"w"}),
     cell("每秒伤害",fmt(s.dpsNear)+" → "+fmt(s.dpsFar),"hp/s",{hot:true,w:"w"}),
     cell("击杀所需命中数",fmt(s.htkNear)+" → "+fmt(s.htkFar),"",{kill:true,w:"n"}),
     cell("击杀时间",fmt(s.ttkNear)+" → "+fmt(s.ttkFar),"ms",{kill:true,w:"w"}),
@@ -1118,7 +1118,7 @@ function updateSpread(){
   if(dm){
     if(lastTarget==="soldier"&&lastStats){
       const hb=HITBOX.find(h=>h.id===state.hitbox).mult, hs=state.hitbox==="head"?1:HEAVYSET.find(h=>h.id===state.heavyset).mult;
-      dm.innerHTML="伤害 <b>"+fmt(Math.round(dmgAtRange(lastStats,d)*hb*hs))+" hp</b>";
+      dm.innerHTML="伤害 <b>"+fmt(dmgAtRange(lastStats,d)*hb*hs,2)+" hp</b>";
     } else dm.innerHTML="";
   }
 }
@@ -1387,7 +1387,7 @@ const VS_GROUPS=[
   ]},
   {title:"伤害",rows:[
     {label:"射速",unit:"rpm",better:"up",get:(w,s)=>s.rpm,dd:0},
-    {label:"有效伤害",unit:"hp",better:"up",get:(w,s)=>s.effNear,dd:0,disp:(w,s)=>fmt(s.effNear,0)+" → "+fmt(s.effFar,0)},
+    {label:"有效伤害",unit:"hp",better:"up",get:(w,s)=>s.effNear,dd:2,disp:(w,s)=>fmt(s.effNear,2)+" → "+fmt(s.effFar,2)},
     {label:"每秒伤害",unit:"hp/s",better:"up",get:(w,s)=>s.dpsNear,dd:0,disp:(w,s)=>fmt(s.dpsNear)+" → "+fmt(s.dpsFar)},
     {label:"击杀所需命中数",better:"down",get:(w,s)=>s.htkNear,dd:0,disp:(w,s)=>fmt(s.htkNear)+" → "+fmt(s.htkFar)},
     {label:"击杀时间",unit:"ms",better:"down",get:(w,s)=>s.ttkNear,dd:0,disp:(w,s)=>fmt(s.ttkNear)+" → "+fmt(s.ttkFar)},
