@@ -681,11 +681,14 @@ const CAT_MERGE={
   9:{label:"手雷",order:7},
 };
 function catName(w){                       // merged category label for any item
-  if(w.factiontemplateid===0 || w.weaponcategoryid===4) return "杂项";
+  if(w.weaponcategoryid===4) return "杂项";
   return (CAT_MERGE[w.weaponcategoryid]||{}).label || CATEGORIES[w.weaponcategoryid] || ("类别 "+w.weaponcategoryid);
 }
+// faction-0 shared guns that still belong to real faction categories (SMG/pistol)
+const SHARED_FAC0_CATS=[16,17];
 // which sidebar group an item belongs to. Misc = shared/other faction + all equipment.
 function groupOf(w){
+  if(w.factiontemplateid===0 && SHARED_FAC0_CATS.includes(w.weaponcategoryid)) return {fac:"1", cat:catName(w)}; // shown in all three factions
   if(w.factiontemplateid===0 || w.weaponcategoryid===4) return {fac:"misc",cat:null};
   return {fac:String(w.factiontemplateid), cat:catName(w)};
 }
@@ -737,7 +740,7 @@ function buildSidebar(filter=""){
   const f=filter.trim().toLowerCase(), searching=!!f;
   const sbf=state.sbFilter||{fac:"",cat:""};
   const shown=WEAPONS.filter(w=>!f||w.name.toLowerCase().includes(f))
-    .filter(w=>!sbf.fac||String(w.factiontemplateid)===sbf.fac)
+    .filter(w=>!sbf.fac||String(w.factiontemplateid)===sbf.fac||(w.factiontemplateid===0&&SHARED_FAC0_CATS.includes(w.weaponcategoryid)&&["1","2","3"].includes(sbf.fac)))
     .filter(w=>!sbf.cat||String(w.weaponcategoryid)===sbf.cat);
 
   // ----- Misc group (shared/other + all equipment), flat list -----
@@ -747,6 +750,11 @@ function buildSidebar(filter=""){
     const g=groupOf(w);
     (realFacs[g.fac] ??= {});
     (realFacs[g.fac][g.cat] ??= []).push(w);
+  });
+  // faction-0 shared guns (SMG/pistol) appear under every real faction
+  shown.filter(w=>w.factiontemplateid===0 && SHARED_FAC0_CATS.includes(w.weaponcategoryid)).forEach(w=>{
+    const cat=catName(w);
+    [1,2,3].forEach(fid=>{ (realFacs[fid] ??= {}); if(!(realFacs[fid][cat]??[]).includes(w)) realFacs[fid][cat].push(w); });
   });
 
   const catOrder=lbl=>{const e=Object.values(CAT_MERGE).find(x=>x.label===lbl);return e?e.order:99;};
@@ -1293,7 +1301,7 @@ const TCOLS=[
 function renderTable(){
   const sbf=state.sbFilter||{fac:"",cat:""};
   const fwrap=$("#tblFilterWrap"); if(fwrap){fwrap.innerHTML="";fwrap.appendChild(buildSbFilterBar("inf"));}
-  const rows=WEAPONS.filter(w=>!sbf.fac||String(w.factiontemplateid)===sbf.fac).filter(w=>!sbf.cat||String(w.weaponcategoryid)===sbf.cat).map(w=>({w,s:compute(w,{ammoId:w.defaultAmmo.id,modIds:[],hitbox:"torso",heavyset:"none",stance:"aim"})}));
+  const rows=WEAPONS.filter(w=>!sbf.fac||String(w.factiontemplateid)===sbf.fac||(w.factiontemplateid===0&&SHARED_FAC0_CATS.includes(w.weaponcategoryid)&&["1","2","3"].includes(sbf.fac))).filter(w=>!sbf.cat||String(w.weaponcategoryid)===sbf.cat).map(w=>({w,s:compute(w,{ammoId:w.defaultAmmo.id,modIds:[],hitbox:"torso",heavyset:"none",stance:"aim"})}));
   const {key,dir}=state.sort, col=TCOLS.find(c=>c.k===key);
   rows.sort((a,b)=>{const av=col.get(a.w,a.s),bv=col.get(b.w,b.s);return (typeof av==="string"?av.localeCompare(bv):av-bv)*dir;});
   // 阵营排序（激活时按 美→德→苏→通用 分组，稳定排序保留组内列排序顺序）
