@@ -1677,11 +1677,11 @@ function renderVehicleDetail(){
   // and mounting raises it: Tier 1 LMG +92, Tier 2 LMG (or .50 cal for US/SU) +180.
   // Mountable armament: sidecar bikes + non-amphibious infantry jeeps. Mounting an LMG
   // and/or bringing a supply crate raises the spawn cost.
-  const JEEPS=["Truck, 1/4 ton, 4x4","Kübelwagen Typ 82","GAZ-67"];
-  const mountable = (v.category==="Motorbikes" && /sidecar/i.test(v.name)) || JEEPS.includes(v.name);
+  const JEEPS=["1/4 吨四轮驱动卡车","Kübelwagen 82 式","GAZ-67"];
+  const mountable = (v.category==="摩托车" && /带车斗/.test(v.name)) || JEEPS.includes(v.name);
   let baseSpawn=v.spawnCost;
   if(mountable && baseSpawn==null){
-    const plain=v.name.replace(/\s*with\s*sidecar/i,"").trim().toLowerCase();
+    const plain=v.name.replace(/带车斗的?/i,"").trim().toLowerCase();
     const twin=VEHICLES.find(x=>x.name.toLowerCase()===plain && x.spawnCost!=null);
     if(twin) baseSpawn=twin.spawnCost;
   }
